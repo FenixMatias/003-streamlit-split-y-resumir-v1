@@ -12,6 +12,11 @@ def load_LLM(openai_api_key):
     llm = OpenAI(temperature=0, openai_api_key=openai_api_key)
     return llm
 
+template = """
+    A continuación encontrará un archivo.
+    Su objetivo es:
+    - Resumir en español el documento
+"""
 
 #Título y cabecera de la página
 st.set_page_config(page_title="Resumidor de textos largos AI")
@@ -89,7 +94,8 @@ if uploaded_file is not None:
 
     summarize_chain = load_summarize_chain(
         llm=llm, 
-        chain_type="map_reduce"
+        chain_type="map_reduce",
+        template=template
         )
 
     summary_output = summarize_chain.run(splitted_documents)
