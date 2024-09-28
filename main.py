@@ -17,6 +17,7 @@ template = """
     A continuación encontrará un archivo.
     Su objetivo es:
     - Resumir el siguiente documento en español de manera clara y concisa.
+    Documento: {document}
 """
 
 # Título y cabecera de la página
@@ -84,8 +85,11 @@ if uploaded_file is not None:
     # Dividir el documento en fragmentos
     splitted_documents = text_splitter.create_documents([file_input])
 
-    # Convertir cada fragmento en un objeto de tipo `Document`
-    documents = [Document(page_content=doc.page_content) for doc in splitted_documents]
+    # Aplicar el template a cada fragmento de documento
+    documents_with_template = [
+        Document(page_content=template.format(document=doc.page_content)) 
+        for doc in splitted_documents
+    ]
 
     # Cargar el LLM
     llm = load_LLM(openai_api_key=openai_api_key)
@@ -96,7 +100,7 @@ if uploaded_file is not None:
         chain_type="map_reduce"
     )
 
-    # Ejecutar la cadena de resumen sobre los documentos
-    summary_output = summarize_chain.run(documents)
+    # Ejecutar la cadena de resumen sobre los documentos con template
+    summary_output = summarize_chain.run(documents_with_template)
 
     st.write(summary_output)
