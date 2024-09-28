@@ -15,7 +15,8 @@ def load_LLM(openai_api_key):
 template = """
     A continuación encontrará un archivo.
     Su objetivo es:
-    - Resumir en español el documento
+    - Resumir el siguiente documento en español de manera clara y concisa.
+    Documento: {document}
 """
 
 #Título y cabecera de la página
@@ -94,10 +95,13 @@ if uploaded_file is not None:
 
     summarize_chain = load_summarize_chain(
         llm=llm, 
-        chain_type="map_reduce",
-        template=template
-        )
+        chain_type="map_reduce"
+    )
 
-    summary_output = summarize_chain.run(splitted_documents)
+    # Aplicar el template al documento cargado
+    prompt = template.format(document=file_input)
+
+    # Ejecutar el LLM con el texto formateado
+    summary_output = summarize_chain.run([prompt])
 
     st.write(summary_output)
