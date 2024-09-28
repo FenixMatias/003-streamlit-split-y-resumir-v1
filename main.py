@@ -101,7 +101,6 @@ if uploaded_file is not None:
         chain_type="map_reduce"
     )
 
-    # Ejecutar la cadena de resumen sobre los documentos con template
     summary_output = summarize_chain.run(documents_with_template)
-
-    st.write(summary_output)
+    translated_summary = llm(f"Por favor, traduce el siguiente texto al español: {summary_output}")
+    st.write(translated_summary)
