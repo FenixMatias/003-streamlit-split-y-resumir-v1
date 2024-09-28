@@ -16,7 +16,8 @@ def load_LLM(openai_api_key):
 template = """
     A continuación encontrará un archivo.
     Su objetivo es:
-    - Resumir el siguiente documento en español de manera clara y concisa.
+    - Resumir el siguiente documento en español, de manera clara y concisa.
+    - El resumen debe estar estrictamente en español.
     Documento: {document}
 """
 
