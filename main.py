@@ -3,28 +3,27 @@ from langchain import PromptTemplate
 from langchain_openai import OpenAI
 from langchain.chains.summarize import load_summarize_chain
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.docstore.document import Document
 import pandas as pd
 from io import StringIO
 
-#LLM y función de carga de llaves
 def load_LLM(openai_api_key):
     # Asegúrese de que su openai_api_key se establece como una variable de entorno
     llm = OpenAI(temperature=0, openai_api_key=openai_api_key)
     return llm
 
+# Template para las instrucciones en español
 template = """
     A continuación encontrará un archivo.
     Su objetivo es:
     - Resumir el siguiente documento en español de manera clara y concisa.
-    Documento: {document}
 """
 
-#Título y cabecera de la página
+# Título y cabecera de la página
 st.set_page_config(page_title="Resumidor de textos largos AI")
 st.header("Resumidor de textos largos AI")
 
-
-#Intro: instrucciones
+# Intro: instrucciones
 col1, col2 = st.columns(2)
 
 with col1:
@@ -34,11 +33,11 @@ with col2:
     st.write("Contacte con [Matias Toro Labra](https://www.linkedin.com/in/luis-matias-toro-labra-b4074121b/) para construir sus proyectos de IA")
 
 
-#Introducir la clave API de OpenAI
+# Introducir la clave API de OpenAI
 st.markdown("## Introduzca su clave API de OpenAI")
 
 def get_openai_api_key():
-    input_text = st.text_input(label="Clave API de OpenAI ",  placeholder="Ex: sk-2twmA8tfCb8un4...", key="openai_api_key_input", type="password")
+    input_text = st.text_input(label="Clave API de OpenAI",  placeholder="Ex: sk-2twmA8tfCb8un4...", key="openai_api_key_input", type="password")
     return input_text
 
 openai_api_key = get_openai_api_key()
@@ -49,26 +48,19 @@ st.markdown("## Cargue el archivo de texto que desea resumir")
 
 uploaded_file = st.file_uploader("Elija un archivo", type="txt")
 
-       
+
 # Output
 st.markdown("### Este es su resumen:")
 
 if uploaded_file is not None:
     # Para leer el archivo como bytes:
     bytes_data = uploaded_file.getvalue()
-    #st.write(bytes_data)
 
     # Para convertir a una cadena basada en IO:
     stringio = StringIO(uploaded_file.getvalue().decode("utf-8"))
-    #st.write(stringio)
 
     # Para leer el archivo como cadena:
     string_data = stringio.read()
-    #st.write(string_data)
-
-    # Puede utilizarse siempre que se acepte un objeto "similar a un archivo".:
-    #dataframe = pd.read_csv(uploaded_file)
-    #st.write(dataframe)
 
     file_input = string_data
 
@@ -87,21 +79,24 @@ if uploaded_file is not None:
         separators=["\n\n", "\n"], 
         chunk_size=5000, 
         chunk_overlap=350
-        )
+    )
 
+    # Dividir el documento en fragmentos
     splitted_documents = text_splitter.create_documents([file_input])
 
+    # Convertir cada fragmento en un objeto de tipo `Document`
+    documents = [Document(page_content=doc.page_content) for doc in splitted_documents]
+
+    # Cargar el LLM
     llm = load_LLM(openai_api_key=openai_api_key)
 
+    # Cargar la cadena de resumen
     summarize_chain = load_summarize_chain(
         llm=llm, 
         chain_type="map_reduce"
     )
 
-    # Aplicar el template al documento cargado
-    prompt = template.format(document=file_input)
-
-    # Ejecutar el LLM con el texto formateado
-    summary_output = summarize_chain.run([prompt])
+    # Ejecutar la cadena de resumen sobre los documentos
+    summary_output = summarize_chain.run(documents)
 
     st.write(summary_output)
